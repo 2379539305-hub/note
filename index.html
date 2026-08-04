@@ -1,185 +1,285 @@
- <!DOCTYPE html>
- <html lang="zh-CN">
- <head>
- <meta charset="UTF-8">
- <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>笔记</title>
- <style>
-   * { margin: 0; padding: 0; box-sizing: border-box; }
-   body {
-     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-     background: #f5f5f5;
-     color: #1a1a1a;
-     min-height: 100vh;
-   }
-   .toolbar {
-     display: flex; align-items: center; gap: 12px;
-     padding: 16px 24px;
-     background: #fff;
-     border-bottom: 1px solid #e5e5e5;
-     position: sticky; top: 0; z-index: 10;
-   }
-   .toolbar h1 { font-size: 18px; font-weight: 600; }
-   .toolbar .actions { margin-left: auto; display: flex; gap: 8px; }
-   .btn {
-     display: inline-flex; align-items: center; gap: 6px;
-     padding: 8px 16px;
-     border: 1px solid #d4d4d4;
-     border-radius: 6px;
-     background: #fff;
-     font-size: 14px;
-     cursor: pointer;
-     transition: background .15s;
-   }
-   .btn:hover { background: #f0f0f0; }
-   .btn.primary { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
-   .btn.primary:hover { background: #333; }
-   .container {
-     max-width: 720px; margin: 32px auto; padding: 0 24px;
-     display: flex; flex-direction: column; gap: 16px;
-   }
-   .note-card {
-     background: #fff;
-     border: 1px solid #e5e5e5;
-     border-radius: 8px;
-     padding: 20px 24px;
-     cursor: pointer;
-     transition: box-shadow .15s;
-     position: relative;
-   }
-   .note-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,.08); }
-   .note-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
-   .note-card p { font-size: 13px; color: #666; line-height: 1.5; }
-   .note-card .time { font-size: 12px; color: #999; margin-top: 10px; }
-   .note-card .del-btn {
-     position: absolute; top: 14px; right: 16px;
-     background: none; border: none; color: #999;
-     font-size: 18px; cursor: pointer; padding: 4px 8px;
-     border-radius: 4px;
-   }
-   .note-card .del-btn:hover { color: #e00; background: #fef2f2; }
-   .editor {
-     background: #fff;
-     border: 1px solid #e5e5e5;
-     border-radius: 8px;
-     padding: 20px 24px;
-     display: none; flex-direction: column; gap: 12px;
-   }
-   .editor.active { display: flex; }
-   .editor input {
-     border: none; outline: none;
-     font-size: 18px; font-weight: 600;
-     padding: 4px 0;
-   }
-   .editor textarea {
-     border: none; outline: none; resize: vertical;
-     font-size: 14px; font-family: inherit;
-     line-height: 1.6; min-height: 120px;
-   }
-   .editor .editor-actions { display: flex; gap: 8px; justify-content: flex-end; }
-   .empty-state {
-     text-align: center; padding: 60px 0; color: #999;
-   }
-   .empty-state svg { margin-bottom: 16px; opacity: .3; }
- </style>
- </head>
- <body>
- <div class="toolbar">
-   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-   <h1>我的笔记</h1>
-   <div class="actions">
-     <button class="btn primary" onclick="showEditor()">+ 新建笔记</button>
-   </div>
- </div>
- <div class="container" id="notesContainer"></div>
- <div class="editor container" id="editor">
-   <input type="text" id="titleInput" placeholder="标题">
-   <textarea id="bodyInput" placeholder="写点什么..."></textarea>
-   <div class="editor-actions">
-     <button class="btn" onclick="hideEditor()">取消</button>
-     <button class="btn primary" onclick="saveNote()">保存</button>
-   </div>
- </div>
- <script>
- const STORAGE_KEY = 'notes_data';
- let editingId = null;
- 
- function loadNotes() {
-   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
-   catch { return []; }
- }
- 
- function saveNotes(notes) { localStorage.setItem(STORAGE_KEY, JSON.stringify(notes)); }
- 
- function render() {
-   const notes = loadNotes();
-   const c = document.getElementById('notesContainer');
-   if (notes.length === 0) {
-     c.innerHTML = '<div class="empty-state"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg><p>还没有笔记，点击上方按钮开始写</p></div>';
-     return;
-   }
-   c.innerHTML = notes.map((n, i) =>
-     '<div class="note-card" onclick="editNote(\'' + n.id + '\')">' +
-       '<h3>' + esc(n.title || '无标题') + '</h3>' +
-       '<p>' + esc(n.body || '').substring(0, 120) + (n.body && n.body.length > 120 ? '...' : '') + '</p>' +
-       '<div class="time">' + n.time + '</div>' +
-       '<button class="del-btn" onclick="event.stopPropagation();deleteNote(\'' + n.id + '\')" title="删除">×</button>' +
-     '</div>'
-   ).join('');
- }
- 
- function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
- 
- function showEditor(id) {
-   editingId = id || null;
-   document.getElementById('editor').classList.add('active');
-   document.getElementById('notesContainer').style.display = 'none';
-   if (id) {
-     const n = loadNotes().find(x => x.id === id);
-     if (n) {
-       document.getElementById('titleInput').value = n.title;
-       document.getElementById('bodyInput').value = n.body;
-     }
-   } else {
-     document.getElementById('titleInput').value = '';
-     document.getElementById('bodyInput').value = '';
-   }
-   document.getElementById('titleInput').focus();
- }
- 
- function hideEditor() {
-   editingId = null;
-   document.getElementById('editor').classList.remove('active');
-   document.getElementById('notesContainer').style.display = '';
- }
- 
- function saveNote() {
-   const title = document.getElementById('titleInput').value.trim();
-   const body = document.getElementById('bodyInput').value.trim();
-   if (!title && !body) return;
-   const notes = loadNotes();
-   const now = new Date().toLocaleString('zh-CN');
-   if (editingId) {
-     const idx = notes.findIndex(n => n.id === editingId);
-     if (idx !== -1) { notes[idx].title = title; notes[idx].body = body; notes[idx].time = now; }
-   } else {
-     notes.unshift({ id: Date.now().toString(36), title, body, time: now });
-   }
-   saveNotes(notes);
-   hideEditor();
-   render();
- }
- 
- function editNote(id) { showEditor(id); }
- 
- function deleteNote(id) {
-   if (!confirm('确定删除这条笔记？')) return;
-   const notes = loadNotes().filter(n => n.id !== id);
-   saveNotes(notes);
-   render();
- }
- 
- render();
- </script>
- </body>
- </html>
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>笔记</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f5f5f5; color: #1a1a1a; min-height: 100vh;
+  }
+  .toolbar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 16px 24px; background: #fff;
+    border-bottom: 1px solid #e5e5e5;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .toolbar h1 { font-size: 18px; font-weight: 600; }
+  .toolbar .actions { margin-left: auto; display: flex; gap: 8px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border: 1px solid #d4d4d4;
+    border-radius: 6px; background: #fff; font-size: 14px;
+    cursor: pointer; transition: background .15s;
+  }
+  .btn:hover { background: #f0f0f0; }
+  .btn.primary { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+  .btn.primary:hover { background: #333; }
+
+  /* split layout */
+  .split {
+    display: flex; max-width: 1200px; margin: 0 auto; padding: 0 24px; gap: 24px;
+    min-height: calc(100vh - 69px);
+  }
+  @media (max-width: 900px) { .split { flex-direction: column; } }
+  .panel { flex: 1; padding-top: 24px; }
+  .panel-left { max-width: 400px; min-width: 280px; }
+  .panel-right { min-width: 0; }
+  .panel h2 {
+    font-size: 13px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.5px; color: #888; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .panel h2::after { content: ""; flex: 1; height: 1px; background: #e5e5e5; }
+
+  /* quick notes */
+  .quick-notes { display: flex; flex-direction: column; gap: 10px; }
+  .note-card {
+    background: #fff; border: 1px solid #e5e5e5; border-radius: 8px;
+    padding: 16px 18px; cursor: pointer; position: relative;
+    transition: box-shadow .15s;
+  }
+  .note-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+  .note-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .note-card p { font-size: 13px; color: #666; line-height: 1.4; }
+  .note-card .time { font-size: 12px; color: #999; margin-top: 8px; }
+  .note-card .del-btn {
+    position: absolute; top: 10px; right: 12px;
+    background: none; border: none; color: #999;
+    font-size: 18px; cursor: pointer; padding: 4px 8px; border-radius: 4px;
+  }
+  .note-card .del-btn:hover { color: #e00; background: #fef2f2; }
+  .empty-state { text-align: center; padding: 40px 0; color: #999; font-size: 13px; }
+
+  .editor {
+    background: #fff; border: 1px solid #e5e5e5; border-radius: 8px;
+    padding: 18px 20px; display: none; flex-direction: column; gap: 10px;
+  }
+  .editor.active { display: flex; }
+  .editor input {
+    border: none; outline: none; font-size: 16px; font-weight: 600; padding: 4px 0;
+  }
+  .editor textarea {
+    border: none; outline: none; resize: vertical;
+    font-size: 14px; font-family: inherit; line-height: 1.6; min-height: 100px;
+  }
+  .editor .editor-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+  /* learn notes */
+  .learn-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 20px; }
+  .learn-link {
+    display: block; padding: 9px 12px; border-radius: 6px;
+    text-decoration: none; color: #1a1a1a; font-size: 13px;
+    transition: background .12s; border: 1px solid transparent;
+  }
+  .learn-link:hover { background: #f0f0f0; border-color: #e5e5e5; }
+  .learn-link.active { background: #eef; border-color: #ccd; font-weight: 600; }
+  .learn-link .cat {
+    font-size: 11px; color: #666; margin-right: 6px;
+    padding: 1px 6px; border-radius: 3px; background: #e8e8e8;
+  }
+  .learn-viewer {
+    background: #fff; border: 1px solid #e5e5e5; border-radius: 8px;
+    padding: 28px 32px; line-height: 1.8; font-size: 14px; min-height: 300px;
+  }
+  .learn-viewer h1 { font-size: 20px; margin-bottom: 16px; }
+  .learn-viewer h2 { font-size: 16px; margin: 24px 0 10px; color: #333; }
+  .learn-viewer h3 { font-size: 14px; margin: 18px 0 8px; }
+  .learn-viewer p { margin: 8px 0; }
+  .learn-viewer code {
+    background: #f5f5f5; padding: 2px 6px; border-radius: 4px;
+    font-size: 13px; font-family: "SF Mono", Consolas, monospace;
+  }
+  .learn-viewer pre {
+    background: #f8f8f8; border: 1px solid #e5e5e5; border-radius: 6px;
+    padding: 14px 18px; overflow-x: auto; margin: 12px 0; font-size: 13px;
+  }
+  .learn-viewer pre code { background: none; padding: 0; }
+  .learn-viewer table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+  .learn-viewer th, .learn-viewer td {
+    border: 1px solid #e5e5e5; padding: 8px 12px; text-align: left; font-size: 13px;
+  }
+  .learn-viewer th { background: #f5f5f5; font-weight: 600; }
+  .learn-viewer .loading { color: #999; text-align: center; padding: 60px 0; }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+  <h1>笔记</h1>
+  <div class="actions">
+    <button class="btn primary" onclick="showEditor()">+ 新建笔记</button>
+  </div>
+</div>
+
+<div class="split">
+  <div class="panel panel-left">
+    <h2>快速笔记</h2>
+    <div class="quick-notes" id="quickNotes"></div>
+    <div class="editor" id="editor">
+      <input type="text" id="titleInput" placeholder="标题">
+      <textarea id="bodyInput" placeholder="写点什么..."></textarea>
+      <div class="editor-actions">
+        <button class="btn" onclick="hideEditor()">取消</button>
+        <button class="btn primary" onclick="saveNote()">保存</button>
+      </div>
+    </div>
+  </div>
+  <div class="panel panel-right">
+    <h2>学习笔记</h2>
+    <div class="learn-list" id="learnList"></div>
+    <div class="learn-viewer" id="learnViewer">
+      <div class="loading">← 左侧选择一篇笔记查看</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== 快速笔记 (localStorage) =====
+var STORAGE_KEY = "notes_data", editingId = null;
+function loadNotes() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
+  catch(e) { return []; }
+}
+function saveNotes(notes) { localStorage.setItem(STORAGE_KEY, JSON.stringify(notes)); }
+function renderQuick() {
+  var notes = loadNotes();
+  var c = document.getElementById("quickNotes");
+  if (!notes.length) {
+    c.innerHTML = "<div class=\"empty-state\">还没有笔记，点击上方 + 开始写</div>";
+    return;
+  }
+  c.innerHTML = notes.map(function(n) {
+    return "<div class=\"note-card\" onclick=\"editNote('" + n.id + "')\">"
+      + "<h3>" + esc(n.title || "无标题") + "</h3>"
+      + "<p>" + esc(n.body || "").substring(0, 100) + (n.body && n.body.length > 100 ? "..." : "") + "</p>"
+      + "<div class=\"time\">" + n.time + "</div>"
+      + "<button class=\"del-btn\" onclick=\"event.stopPropagation();deleteNote('" + n.id + "')\" title=\"删除\">&times;</button>"
+      + "</div>";
+  }).join("");
+}
+function esc(s) { var d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+function showEditor(id) {
+  editingId = id || null;
+  var e = document.getElementById("editor");
+  e.classList.add("active");
+  document.getElementById("quickNotes").style.display = "none";
+  if (id) {
+    var n = loadNotes().find(function(x) { return x.id === id; });
+    if (n) {
+      document.getElementById("titleInput").value = n.title;
+      document.getElementById("bodyInput").value = n.body;
+    }
+  } else {
+    document.getElementById("titleInput").value = "";
+    document.getElementById("bodyInput").value = "";
+  }
+  document.getElementById("titleInput").focus();
+}
+function hideEditor() {
+  editingId = null;
+  document.getElementById("editor").classList.remove("active");
+  document.getElementById("quickNotes").style.display = "";
+}
+function saveNote() {
+  var title = document.getElementById("titleInput").value.trim();
+  var body = document.getElementById("bodyInput").value.trim();
+  if (!title && !body) return;
+  var notes = loadNotes();
+  var now = new Date().toLocaleString("zh-CN");
+  if (editingId) {
+    var idx = notes.findIndex(function(n) { return n.id === editingId; });
+    if (idx !== -1) { notes[idx].title = title; notes[idx].body = body; notes[idx].time = now; }
+  } else {
+    notes.unshift({ id: Date.now().toString(36), title: title, body: body, time: now });
+  }
+  saveNotes(notes);
+  hideEditor();
+  renderQuick();
+}
+function editNote(id) { showEditor(id); }
+function deleteNote(id) {
+  if (!confirm("删除这条笔记？")) return;
+  saveNotes(loadNotes().filter(function(n) { return n.id !== id; }));
+  renderQuick();
+}
+renderQuick();
+
+// ===== 学习笔记 (fetch markdown) =====
+var learnNotes = [
+  { file: "https://raw.githubusercontent.com/2379539305-hub/note/main/%E8%BD%AF%E4%BB%B6/hall_cross_direction.md", cat: "软件", title: "霍尔传感器方向检测：二维叉积原理" }
+];
+
+var learnList = document.getElementById("learnList");
+var learnViewer = document.getElementById("learnViewer");
+
+learnNotes.forEach(function(n) {
+  var a = document.createElement("a");
+  a.className = "learn-link";
+  a.href = "#";
+  a.innerHTML = "<span class=\"cat\">" + n.cat + "</span>" + n.title;
+  a.onclick = function(e) {
+    e.preventDefault();
+    var links = document.querySelectorAll(".learn-link");
+    links.forEach(function(l) { l.classList.remove("active"); });
+    a.classList.add("active");
+    loadLearnNote(n.file);
+  };
+  learnList.appendChild(a);
+});
+
+function loadLearnNote(url) {
+  learnViewer.innerHTML = "<div class=\"loading\">加载中...</div>";
+  fetch(url)
+    .then(function(r) { if (!r.ok) throw r; return r.text(); })
+    .then(function(md) { learnViewer.innerHTML = renderMD(md); })
+    .catch(function() { learnViewer.innerHTML = "<div class=\"loading\">加载失败，请检查网络</div>"; });
+}
+
+function renderMD(md) {
+  var html = md;
+  // code blocks first
+  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, "<pre><code>$2</code></pre>");
+  // inline code
+  html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+  // headers
+  html = html.replace(/^### (.+)$/gm, "<h3>$1</h3>");
+  html = html.replace(/^## (.+)$/gm, "<h2>$1</h2>");
+  html = html.replace(/^# (.+)$/gm, "<h1>$1</h1>");
+  // tables
+  html = html.replace(/^\|(.+)\|\s*\n\|[-:| ]+\|\s*\n((?:\|.+\|\s*\n?)*)/gm, function(_, h, r) {
+    var head = "<tr>" + h.split("|").filter(function(c) { return c.trim(); }).map(function(c) { return "<th>" + c.trim() + "</th>"; }).join("") + "</tr>";
+    var rows = r.trim().split("\n").map(function(row) {
+      return "<tr>" + row.split("|").filter(function(c) { return c.trim(); }).map(function(c) { return "<td>" + c.trim() + "</td>"; }).join("") + "</tr>";
+    }).join("");
+    return "<table>" + head + rows + "</table>";
+  });
+  // bold
+  html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  // paragraphs for remaining non-tag lines
+  var lines = html.split("\n");
+  var out = [];
+  lines.forEach(function(line) {
+    var t = line.trim();
+    if (!t) { out.push(""); return; }
+    if (t.match(/^<(h[1-3]|table|tr|th|td|pre|code|p|strong)/)) { out.push(t); }
+    else { out.push("<p>" + t + "</p>"); }
+  });
+  return out.join("\n");
+}
+</script>
+</body>
+</html>
