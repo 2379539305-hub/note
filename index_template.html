@@ -129,10 +129,7 @@ function renderMD(md){
   return o.join("\n")
 }
 
-var learnNotes = [
-    { cat: "软件", title: "hall_cross_direction", md: '# 霍尔传感器方向检测：二维叉积原理\n\n## 代码\n\n```c\ncross = ((int32_t)hall->detect->dir_a_prev * (int32_t)hall->hall_b_raw) - \n        ((int32_t)hall->detect->dir_b_prev * (int32_t)hall->hall_a_raw);\n```\n\n## 数学本质\n\n二维叉积（行列式）：\n\n```\ncross = x_prev * y_now - y_prev * x_now\n      = |A| * |B| * sin(θ)\n```\n\n- `(dir_a_prev, dir_b_prev)` — 上一时刻的霍尔方向向量\n- `(hall_a_raw, hall_b_raw)` — 当前原始霍尔采样值（两相正交分量）\n\n## 方向判断\n\n| cross | 含义 |\n|---|---|\n| > 0 | 逆时针（正转），当前向量在上一次左侧 |\n| < 0 | 顺时针（反转），当前向量在上一次右侧 |\n| = 0 | 共线（静止或翻转 180°） |\n\n## 为什么用 raw 值而不是校正值\n\n注释明确指出：此时 offset 偏置尚未计算（step2 才得出），因此不能使用 `hall_sin` 等校正后的值。\n\n但叉积的**符号**不依赖直流偏置是否消除——只要两路信号的相位关系正确，raw 值足以判定方向。这是利用几何关系绕开标定未完成的问题。\n' },
-    { cat: "硬件", title: "creepage_vs_clearance", md: '# 爬电距离 vs 电气间隙\n\n## 定义\n\n| 术语 | 英文 | 路径 |\n|---|---|---|\n| **爬电距离** | Creepage Distance | 沿绝缘材料**表面**的最短路径 |\n| **电气间隙** | Clearance | 通过**空气**的最短直线距离 |\n\n## 直观理解\n\n```\n  导体A ~~~~~~~~~~~~~~~ 导体B\n          \\         /\n   空气    \\       /   ← 电气间隙（空中直线）\n            \\     /\n   ———————————————————  PCB 表面\n    ~~~~~~~~~~~~~~~       ← 爬电距离（贴着表面走）\n```\n\n**爬电距离 ≥ 电气间隙**，因为沿表面绕行不会比空中直线更短。\n\n## 影响因素\n\n| 因素 | 爬电距离 | 电气间隙 |\n|---|---|---|\n| 工作电压 | ✓ | ✓ |\n| 污染等级 (Pollution Degree) | ✓ 影响大 | 影响小 |\n| CTI (相比漏电起痕指数) | ✓ | — |\n| 冲击耐压 (Impulse Voltage) | — | ✓ 主要决定因素 |\n| 海拔高度 | — | ✓ 海拔越高间隙需越大 |\n| 绝缘材料表面形状 | ✓ 开槽可增加有效爬距 | — |\n\n## 关键概念\n\n- **污染等级**：PCB 一般按 Pollution Degree 2（非导电污染，偶有凝露）\n- **CTI**：材料表面抗漏电起痕能力，FR-4 通常在 PLC 3~4 档（175V~250V）\n- **开槽**：在 PCB 上在两导体间开槽，强迫爬电路径绕行，是增加爬电距离的常用手段\n\n## 在电机驱动中的典型场景\n\n- **高压侧与低压侧隔离**：MOSFET 驱动的高压区域（如 310V DC Bus）与 MCU 低压侧之间，需满足加强绝缘要求\n- **相间隔离**：U/V/W 相输出之间，属于功能绝缘\n- **光耦/隔离器件下方**：不可敷铜，确保爬电距离不被破坏\n\n## 参考标准\n\nIEC 60664-1 / GB/T 16935.1《低压系统内设备的绝缘配合》' }
-  ];
+/* LEARNNOTES_PLACEHOLDER */
 
 var learnList=document.getElementById("learnList"),learnViewer=document.getElementById("learnViewer");
 learnNotes.forEach(function(n){
