@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -6,117 +6,55 @@
 <title>笔记</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: #f5f5f5; color: #1a1a1a; min-height: 100vh;
-  }
-  .toolbar {
-    display: flex; align-items: center; gap: 12px;
-    padding: 16px 24px; background: #fff;
-    border-bottom: 1px solid #e5e5e5;
-    position: sticky; top: 0; z-index: 10;
-  }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f5; color: #1a1a1a; min-height: 100vh; }
+  .toolbar { display: flex; align-items: center; gap: 12px; padding: 16px 24px; background: #fff; border-bottom: 1px solid #e5e5e5; position: sticky; top: 0; z-index: 10; }
   .toolbar h1 { font-size: 18px; font-weight: 600; }
   .toolbar .actions { margin-left: auto; display: flex; gap: 8px; }
-  .btn {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 8px 16px; border: 1px solid #d4d4d4;
-    border-radius: 6px; background: #fff; font-size: 14px;
-    cursor: pointer; transition: background .15s;
-  }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border: 1px solid #d4d4d4; border-radius: 6px; background: #fff; font-size: 14px; cursor: pointer; transition: background .15s; }
   .btn:hover { background: #f0f0f0; }
   .btn.primary { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
   .btn.primary:hover { background: #333; }
-
-  /* split layout */
-  .split {
-    display: flex; max-width: 1200px; margin: 0 auto; padding: 0 24px; gap: 24px;
-    min-height: calc(100vh - 69px);
-  }
+  .split { display: flex; max-width: 1200px; margin: 0 auto; padding: 0 24px; gap: 24px; min-height: calc(100vh - 69px); }
   @media (max-width: 900px) { .split { flex-direction: column; } }
   .panel { flex: 1; padding-top: 24px; }
   .panel-left { max-width: 400px; min-width: 280px; }
   .panel-right { min-width: 0; }
-  .panel h2 {
-    font-size: 13px; font-weight: 600; text-transform: uppercase;
-    letter-spacing: 0.5px; color: #888; margin-bottom: 14px;
-    display: flex; align-items: center; gap: 8px;
-  }
+  .panel h2 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #888; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
   .panel h2::after { content: ""; flex: 1; height: 1px; background: #e5e5e5; }
-
-  /* quick notes */
   .quick-notes { display: flex; flex-direction: column; gap: 10px; }
-  .note-card {
-    background: #fff; border: 1px solid #e5e5e5; border-radius: 8px;
-    padding: 16px 18px; cursor: pointer; position: relative;
-    transition: box-shadow .15s;
-  }
+  .note-card { background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; padding: 16px 18px; cursor: pointer; position: relative; transition: box-shadow .15s; }
   .note-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,.08); }
   .note-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
   .note-card p { font-size: 13px; color: #666; line-height: 1.4; }
   .note-card .time { font-size: 12px; color: #999; margin-top: 8px; }
-  .note-card .del-btn {
-    position: absolute; top: 10px; right: 12px;
-    background: none; border: none; color: #999;
-    font-size: 18px; cursor: pointer; padding: 4px 8px; border-radius: 4px;
-  }
+  .note-card .del-btn { position: absolute; top: 10px; right: 12px; background: none; border: none; color: #999; font-size: 18px; cursor: pointer; padding: 4px 8px; border-radius: 4px; }
   .note-card .del-btn:hover { color: #e00; background: #fef2f2; }
   .empty-state { text-align: center; padding: 40px 0; color: #999; font-size: 13px; }
-
-  .editor {
-    background: #fff; border: 1px solid #e5e5e5; border-radius: 8px;
-    padding: 18px 20px; display: none; flex-direction: column; gap: 10px;
-  }
+  .editor { background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; padding: 18px 20px; display: none; flex-direction: column; gap: 10px; }
   .editor.active { display: flex; }
-  .editor input {
-    border: none; outline: none; font-size: 16px; font-weight: 600; padding: 4px 0;
-  }
-  .editor textarea {
-    border: none; outline: none; resize: vertical;
-    font-size: 14px; font-family: inherit; line-height: 1.6; min-height: 100px;
-  }
+  .editor input { border: none; outline: none; font-size: 16px; font-weight: 600; padding: 4px 0; }
+  .editor textarea { border: none; outline: none; resize: vertical; font-size: 14px; font-family: inherit; line-height: 1.6; min-height: 100px; }
   .editor .editor-actions { display: flex; gap: 8px; justify-content: flex-end; }
-
-  /* learn notes */
   .learn-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 20px; }
-  .learn-link {
-    display: block; padding: 9px 12px; border-radius: 6px;
-    text-decoration: none; color: #1a1a1a; font-size: 13px;
-    transition: background .12s; border: 1px solid transparent;
-  }
+  .learn-link { display: block; padding: 9px 12px; border-radius: 6px; text-decoration: none; color: #1a1a1a; font-size: 13px; transition: background .12s; border: 1px solid transparent; }
   .learn-link:hover { background: #f0f0f0; border-color: #e5e5e5; }
   .learn-link.active { background: #eef; border-color: #ccd; font-weight: 600; }
-  .learn-link .cat {
-    font-size: 11px; color: #666; margin-right: 6px;
-    padding: 1px 6px; border-radius: 3px; background: #e8e8e8;
-  }
-  .learn-viewer {
-    background: #fff; border: 1px solid #e5e5e5; border-radius: 8px;
-    padding: 28px 32px; line-height: 1.8; font-size: 14px; min-height: 300px;
-  }
+  .learn-link .cat { font-size: 11px; color: #666; margin-right: 6px; padding: 1px 6px; border-radius: 3px; background: #e8e8e8; }
+  .learn-viewer { background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; padding: 28px 32px; line-height: 1.8; font-size: 14px; min-height: 300px; }
   .learn-viewer h1 { font-size: 20px; margin-bottom: 16px; }
   .learn-viewer h2 { font-size: 16px; margin: 24px 0 10px; color: #333; }
   .learn-viewer h3 { font-size: 14px; margin: 18px 0 8px; }
   .learn-viewer p { margin: 8px 0; }
-  .learn-viewer code {
-    background: #f5f5f5; padding: 2px 6px; border-radius: 4px;
-    font-size: 13px; font-family: "SF Mono", Consolas, monospace;
-  }
-  .learn-viewer pre {
-    background: #f8f8f8; border: 1px solid #e5e5e5; border-radius: 6px;
-    padding: 14px 18px; overflow-x: auto; margin: 12px 0; font-size: 13px;
-  }
+  .learn-viewer code { background: #f5f5f5; padding: 2px 6px; border-radius: 4px; font-size: 13px; font-family: "SF Mono", Consolas, monospace; }
+  .learn-viewer pre { background: #f8f8f8; border: 1px solid #e5e5e5; border-radius: 6px; padding: 14px 18px; overflow-x: auto; margin: 12px 0; font-size: 13px; }
   .learn-viewer pre code { background: none; padding: 0; }
   .learn-viewer table { border-collapse: collapse; width: 100%; margin: 12px 0; }
-  .learn-viewer th, .learn-viewer td {
-    border: 1px solid #e5e5e5; padding: 8px 12px; text-align: left; font-size: 13px;
-  }
+  .learn-viewer th, .learn-viewer td { border: 1px solid #e5e5e5; padding: 8px 12px; text-align: left; font-size: 13px; }
   .learn-viewer th { background: #f5f5f5; font-weight: 600; }
   .learn-viewer .loading { color: #999; text-align: center; padding: 60px 0; }
 </style>
 </head>
 <body>
-
 <div class="toolbar">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
   <h1>笔记</h1>
@@ -124,7 +62,6 @@
     <button class="btn primary" onclick="showEditor()">+ 新建笔记</button>
   </div>
 </div>
-
 <div class="split">
   <div class="panel panel-left">
     <h2>快速笔记</h2>
@@ -146,140 +83,66 @@
     </div>
   </div>
 </div>
-
 <script>
-// ===== 快速笔记 (localStorage) =====
 var STORAGE_KEY = "notes_data", editingId = null;
-function loadNotes() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
-  catch(e) { return []; }
+function loadNotes(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]")}catch(e){return[]}}
+function saveNotes(n){localStorage.setItem(STORAGE_KEY,JSON.stringify(n))}
+function renderQuick(){
+  var n=loadNotes(),c=document.getElementById("quickNotes");
+  if(!n.length){c.innerHTML="<div class=\"empty-state\">没有笔记，点击上方 + 开始写</div>";return}
+  c.innerHTML=n.map(function(x){return "<div class=\"note-card\" onclick=\"editNote('"+x.id+"')\"><h3>"+esc(x.title||"无标题")+"</h3><p>"+esc(x.body||"").substring(0,100)+(x.body&&x.body.length>100?"...":"")+"</p><div class=\"time\">"+x.time+"</div><button class=\"del-btn\" onclick=\"event.stopPropagation();deleteNote('"+x.id+"')\">&times;</button></div>"}).join("")
 }
-function saveNotes(notes) { localStorage.setItem(STORAGE_KEY, JSON.stringify(notes)); }
-function renderQuick() {
-  var notes = loadNotes();
-  var c = document.getElementById("quickNotes");
-  if (!notes.length) {
-    c.innerHTML = "<div class=\"empty-state\">还没有笔记，点击上方 + 开始写</div>";
-    return;
-  }
-  c.innerHTML = notes.map(function(n) {
-    return "<div class=\"note-card\" onclick=\"editNote('" + n.id + "')\">"
-      + "<h3>" + esc(n.title || "无标题") + "</h3>"
-      + "<p>" + esc(n.body || "").substring(0, 100) + (n.body && n.body.length > 100 ? "..." : "") + "</p>"
-      + "<div class=\"time\">" + n.time + "</div>"
-      + "<button class=\"del-btn\" onclick=\"event.stopPropagation();deleteNote('" + n.id + "')\" title=\"删除\">&times;</button>"
-      + "</div>";
-  }).join("");
+function esc(s){var d=document.createElement("div");d.textContent=s;return d.innerHTML}
+function showEditor(id){
+  editingId=id||null;document.getElementById("editor").classList.add("active");document.getElementById("quickNotes").style.display="none";
+  if(id){var n=loadNotes().find(function(x){return x.id===id});if(n){document.getElementById("titleInput").value=n.title;document.getElementById("bodyInput").value=n.body}}
+  else{document.getElementById("titleInput").value="";document.getElementById("bodyInput").value=""}
+  document.getElementById("titleInput").focus()
 }
-function esc(s) { var d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
-function showEditor(id) {
-  editingId = id || null;
-  var e = document.getElementById("editor");
-  e.classList.add("active");
-  document.getElementById("quickNotes").style.display = "none";
-  if (id) {
-    var n = loadNotes().find(function(x) { return x.id === id; });
-    if (n) {
-      document.getElementById("titleInput").value = n.title;
-      document.getElementById("bodyInput").value = n.body;
-    }
-  } else {
-    document.getElementById("titleInput").value = "";
-    document.getElementById("bodyInput").value = "";
-  }
-  document.getElementById("titleInput").focus();
+function hideEditor(){editingId=null;document.getElementById("editor").classList.remove("active");document.getElementById("quickNotes").style.display=""}
+function saveNote(){
+  var t=document.getElementById("titleInput").value.trim(),b=document.getElementById("bodyInput").value.trim();
+  if(!t&&!b)return;var n=loadNotes(),now=new Date().toLocaleString("zh-CN");
+  if(editingId){var i=n.findIndex(function(x){return x.id===editingId});if(i!==-1){n[i].title=t;n[i].body=b;n[i].time=now}}
+  else n.unshift({id:Date.now().toString(36),title:t,body:b,time:now});
+  saveNotes(n);hideEditor();renderQuick()
 }
-function hideEditor() {
-  editingId = null;
-  document.getElementById("editor").classList.remove("active");
-  document.getElementById("quickNotes").style.display = "";
-}
-function saveNote() {
-  var title = document.getElementById("titleInput").value.trim();
-  var body = document.getElementById("bodyInput").value.trim();
-  if (!title && !body) return;
-  var notes = loadNotes();
-  var now = new Date().toLocaleString("zh-CN");
-  if (editingId) {
-    var idx = notes.findIndex(function(n) { return n.id === editingId; });
-    if (idx !== -1) { notes[idx].title = title; notes[idx].body = body; notes[idx].time = now; }
-  } else {
-    notes.unshift({ id: Date.now().toString(36), title: title, body: body, time: now });
-  }
-  saveNotes(notes);
-  hideEditor();
-  renderQuick();
-}
-function editNote(id) { showEditor(id); }
-function deleteNote(id) {
-  if (!confirm("删除这条笔记？")) return;
-  saveNotes(loadNotes().filter(function(n) { return n.id !== id; }));
-  renderQuick();
-}
+function editNote(id){showEditor(id)}
+function deleteNote(id){if(!confirm("删除这条笔记？"))return;saveNotes(loadNotes().filter(function(x){return x.id!==id}));renderQuick()}
 renderQuick();
 
-// ===== 学习笔记 (fetch markdown) =====
+function renderMD(md){
+  var h=md;
+  h=h.replace(/```(\w*)\n([\s\S]*?)```/g,"<pre><code>$2</code></pre>");
+  h=h.replace(/`([^`]+)`/g,"<code>$1</code>");
+  h=h.replace(/^### (.+)$/gm,"<h3>$1</h3>");
+  h=h.replace(/^## (.+)$/gm,"<h2>$1</h2>");
+  h=h.replace(/^# (.+)$/gm,"<h1>$1</h1>");
+  h=h.replace(/^\|(.+)\|\s*\n\|[-:| ]+\|\s*\n((?:\|.+\|\s*\n?)*)/gm,function(_,hr,rw){
+    var hd="<tr>"+hr.split("|").filter(function(c){return c.trim()}).map(function(c){return"<th>"+c.trim()+"</th>"}).join("")+"</tr>";
+    var rs=rw.trim().split("\n").map(function(row){return"<tr>"+row.split("|").filter(function(c){return c.trim()}).map(function(c){return"<td>"+c.trim()+"</td>"}).join("")+"</tr>"}).join("");
+    return"<table>"+hd+rs+"</table>"
+  });
+  h=h.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>");
+  var ls=h.split("\n"),o=[];
+  ls.forEach(function(l){var t=l.trim();if(!t){o.push("");return}if(t.match(/^<(h[1-3]|table|tr|th|td|pre|code|p|strong)/))o.push(t);else o.push("<p>"+t+"</p>")});
+  return o.join("\n")
+}
+
 var learnNotes = [
-  { file: "https://raw.githubusercontent.com/2379539305-hub/note/main/%E8%BD%AF%E4%BB%B6/hall_cross_direction.md", cat: "软件", title: "霍尔传感器方向检测：二维叉积原理" }
+  { cat: "软件", title: "霍尔传感器方向检测：二维叉积原理", md: '# 霍尔传感器方向检测：二维叉积原理\n\n## 代码\n\n```c\ncross = ((int32_t)hall->detect->dir_a_prev * (int32_t)hall->hall_b_raw) - \n        ((int32_t)hall->detect->dir_b_prev * (int32_t)hall->hall_a_raw);\n```\n\n## 数学本质\n\n二维叉积（行列式）：\n\n```\ncross = x_prev * y_now - y_prev * x_now\n      = |A| * |B| * sin(θ)\n```\n\n- `(dir_a_prev, dir_b_prev)` — 上一时刻的霍尔方向向量\n- `(hall_a_raw, hall_b_raw)` — 当前原始霍尔采样值（两相正交分量）\n\n## 方向判断\n\n| cross | 含义 |\n|---|---|\n| > 0 | 逆时针（正转），当前向量在上一次左侧 |\n| < 0 | 顺时针（反转），当前向量在上一次右侧 |\n| = 0 | 共线（静止或翻转 180°） |\n\n## 为什么用 raw 值而不是校正值\n\n注释明确指出：此时 offset 偏置尚未计算（step2 才得出），因此不能使用 `hall_sin` 等校正后的值。\n\n但叉积的**符号**不依赖直流偏置是否消除——只要两路信号的相位关系正确，raw 值足以判定方向。这是利用几何关系绕开标定未完成的问题。\n' }
 ];
 
-var learnList = document.getElementById("learnList");
-var learnViewer = document.getElementById("learnViewer");
-
-learnNotes.forEach(function(n) {
-  var a = document.createElement("a");
-  a.className = "learn-link";
-  a.href = "#";
-  a.innerHTML = "<span class=\"cat\">" + n.cat + "</span>" + n.title;
-  a.onclick = function(e) {
-    e.preventDefault();
-    var links = document.querySelectorAll(".learn-link");
-    links.forEach(function(l) { l.classList.remove("active"); });
-    a.classList.add("active");
-    loadLearnNote(n.file);
+var learnList=document.getElementById("learnList"),learnViewer=document.getElementById("learnViewer");
+learnNotes.forEach(function(n){
+  var a=document.createElement("a");a.className="learn-link";a.href="#";
+  a.innerHTML="<span class=\"cat\">"+n.cat+"</span>"+n.title;
+  a.onclick=function(e){e.preventDefault();
+    document.querySelectorAll(".learn-link").forEach(function(l){l.classList.remove("active")});
+    a.classList.add("active");learnViewer.innerHTML=renderMD(n.md)
   };
-  learnList.appendChild(a);
+  learnList.appendChild(a)
 });
-
-function loadLearnNote(url) {
-  learnViewer.innerHTML = "<div class=\"loading\">加载中...</div>";
-  fetch(url)
-    .then(function(r) { if (!r.ok) throw r; return r.text(); })
-    .then(function(md) { learnViewer.innerHTML = renderMD(md); })
-    .catch(function() { learnViewer.innerHTML = "<div class=\"loading\">加载失败，请检查网络</div>"; });
-}
-
-function renderMD(md) {
-  var html = md;
-  // code blocks first
-  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, "<pre><code>$2</code></pre>");
-  // inline code
-  html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
-  // headers
-  html = html.replace(/^### (.+)$/gm, "<h3>$1</h3>");
-  html = html.replace(/^## (.+)$/gm, "<h2>$1</h2>");
-  html = html.replace(/^# (.+)$/gm, "<h1>$1</h1>");
-  // tables
-  html = html.replace(/^\|(.+)\|\s*\n\|[-:| ]+\|\s*\n((?:\|.+\|\s*\n?)*)/gm, function(_, h, r) {
-    var head = "<tr>" + h.split("|").filter(function(c) { return c.trim(); }).map(function(c) { return "<th>" + c.trim() + "</th>"; }).join("") + "</tr>";
-    var rows = r.trim().split("\n").map(function(row) {
-      return "<tr>" + row.split("|").filter(function(c) { return c.trim(); }).map(function(c) { return "<td>" + c.trim() + "</td>"; }).join("") + "</tr>";
-    }).join("");
-    return "<table>" + head + rows + "</table>";
-  });
-  // bold
-  html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-  // paragraphs for remaining non-tag lines
-  var lines = html.split("\n");
-  var out = [];
-  lines.forEach(function(line) {
-    var t = line.trim();
-    if (!t) { out.push(""); return; }
-    if (t.match(/^<(h[1-3]|table|tr|th|td|pre|code|p|strong)/)) { out.push(t); }
-    else { out.push("<p>" + t + "</p>"); }
-  });
-  return out.join("\n");
-}
 </script>
 </body>
 </html>
